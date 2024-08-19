@@ -1,0 +1,5 @@
+.card-no-border {
+  border: none;
+  border-radius: 0;
+  background: red;
+}
