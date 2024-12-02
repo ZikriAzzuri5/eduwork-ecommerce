@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Container, Nav, Navbar, NavDropdown, Form } from "react-bootstrap";
 import { FaShoppingCart } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { API_ENDPOINTS } from "../config/apiConfig";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { API_ENDPOINTS } from "../config/apiConfig";
 
 export default function Navigation() {
   const [categories, setCategories] = useState([]);
@@ -20,9 +19,7 @@ export default function Navigation() {
       setDebouncedSearch(searchInput);
     }, 500);
 
-    return () => {
-      clearTimeout(handler);
-    };
+    return () => clearTimeout(handler);
   }, [searchInput]);
 
   useEffect(() => {
@@ -32,15 +29,26 @@ export default function Navigation() {
   }, [debouncedSearch, navigate]);
 
   useEffect(() => {
-    axios
-      .get(API_ENDPOINTS.PRODUCT_CATEGORIES)
-      .then((response) => setCategories(response.data.aaData))
-      .catch((error) => console.error("Error fetching categories:", error));
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(API_ENDPOINTS.PRODUCT_CATEGORIES);
+        setCategories(response.data.aaData);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
 
-    axios
-      .get(API_ENDPOINTS.PRODUCT_KEYWORD)
-      .then((response) => setKeywords(response.data.aaData))
-      .catch((error) => console.error("Error fetching keywords:", error));
+    const fetchKeywords = async () => {
+      try {
+        const response = await axios.get(API_ENDPOINTS.PRODUCT_KEYWORD);
+        setKeywords(response.data.aaData);
+      } catch (error) {
+        console.error("Error fetching keywords:", error);
+      }
+    };
+
+    fetchCategories();
+    fetchKeywords();
   }, []);
 
   useEffect(() => {
@@ -49,8 +57,8 @@ export default function Navigation() {
       const totalItems = cartItems.reduce((acc, item) => acc + item.qty, 0);
       setCartItemCount(totalItems);
     };
-    updateCartItemCount();
 
+    updateCartItemCount();
     window.addEventListener("storage", updateCartItemCount);
 
     return () => {
@@ -81,7 +89,11 @@ export default function Navigation() {
             style={{ maxHeight: "100px" }}
             navbarScroll
           >
-            <NavDropdown title="Categories" id="navbarScrollingDropdown">
+            <NavDropdown
+              title="Categories"
+              id="navbarScrollingDropdown"
+              aria-label="Categories"
+            >
               {categories.map((category) => (
                 <NavDropdown.Item
                   key={category.product_category_id}
@@ -93,7 +105,11 @@ export default function Navigation() {
                 </NavDropdown.Item>
               ))}
             </NavDropdown>
-            <NavDropdown title="Keywords" id="navbarScrollingDropdown">
+            <NavDropdown
+              title="Keywords"
+              id="navbarScrollingDropdown"
+              aria-label="Keywords"
+            >
               {keywords.map((keyword) => (
                 <NavDropdown.Item
                   key={keyword.keyword_id}
@@ -103,6 +119,9 @@ export default function Navigation() {
                 </NavDropdown.Item>
               ))}
             </NavDropdown>
+            <Link to="/invoice" className="nav-link">
+              Invoice
+            </Link>
           </Nav>
           <Form className="d-flex">
             <Form.Control
@@ -114,26 +133,24 @@ export default function Navigation() {
               onChange={handleSearchInputChange}
             />
           </Form>
-          <Link to="/cart">
-            <div className="position-relative">
-              <FaShoppingCart size={24} />
-              {cartItemCount > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-5px",
-                    right: "-10px",
-                    backgroundColor: "red",
-                    color: "white",
-                    borderRadius: "50%",
-                    padding: "2px 6px",
-                    fontSize: "12px",
-                  }}
-                >
-                  {cartItemCount}
-                </span>
-              )}
-            </div>
+          <Link to="/cart" className="position-relative">
+            <FaShoppingCart size={24} />
+            {cartItemCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-5px",
+                  right: "-10px",
+                  backgroundColor: "red",
+                  color: "white",
+                  borderRadius: "50%",
+                  padding: "2px 6px",
+                  fontSize: "12px",
+                }}
+              >
+                {cartItemCount}
+              </span>
+            )}
           </Link>
         </Navbar.Collapse>
       </Container>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container, Card } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 export default function Invoice() {
   const [invoiceData, setInvoiceData] = useState(null);
@@ -10,7 +11,14 @@ export default function Invoice() {
   }, []);
 
   if (!invoiceData) {
-    return <p>loading invoice...</p>;
+    return (
+      <Container className="my-4">
+        <p>
+          There is no invoice. Please add products to the cart.{" "}
+          <Link to="/">Back to dashboard</Link>
+        </p>
+      </Container>
+    );
   }
 
   const { address, totalPrice, deliveryFee } = invoiceData;

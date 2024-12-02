@@ -2,6 +2,20 @@ import { useState, useEffect } from "react";
 import { Form, Button, Col, Row, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/apiConfig";
+import { useForm, Controller } from "react-hook-form";
+import * as Yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const validationSchema = Yup.object({
+  name: Yup.string().required("Name is required"),
+  phone: Yup.string()
+    .matches(/^[0-9]+$/, "Phone number must only contain digits")
+    .required("Phone number is required"),
+  province: Yup.string().required("Province is required"),
+  city: Yup.string().required("City is required"),
+  addressDetail: Yup.string().required("Address detail is required"),
+});
 
 export default function Address() {
   const navigate = useNavigate();
@@ -111,7 +125,7 @@ export default function Address() {
     }));
     setLoading(true);
     axios
-      .post("https://demo.sistemtoko.com/public/demo/web_order", { address })
+      .post(`${API_ENDPOINTS.SUBMIT_ORDER}`, { address })
       .then((response) => {
         const invoiceData = {
           address,
@@ -133,42 +147,82 @@ export default function Address() {
       navigate("/");
     }
   }, [navigate]);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm({
+    resolver: yupResolver(validationSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      province: "",
+      city: "",
+      addressDetail: "",
+    },
+  });
   return (
     <Container>
       <h2>Shipping Cost</h2>
-      <Form>
+      <Form noValidate onSubmit={handleSubmit(handleCheckout)}>
         <Row>
           <Col md="6">
             <Form.Group>
               <Form.Label>Name:</Form.Label>
-              <Form.Control
-                type="text"
+              <Controller
                 name="name"
-                value={address.name}
-                onChange={handleInputChange}
+                control={control}
+                render={({ field }) => (
+                  <Form.Control
+                    type="text"
+                    {...field}
+                    isInvalid={!!errors.name}
+                  />
+                )}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.name?.message}
+              </Form.Control.Feedback>
             </Form.Group>
           </Col>
           <Col md="6">
             <Form.Group>
               <Form.Label>Phone Number:</Form.Label>
-              <Form.Control
-                type="text"
+              <Controller
                 name="phone"
-                value={address.phone}
-                onChange={handleInputChange}
+                control={control}
+                render={({ field }) => (
+                  <Form.Control
+                    type="text"
+                    {...field}
+                    isInvalid={!!errors.phone}
+                  />
+                )}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.phone?.message}
+              </Form.Control.Feedback>
             </Form.Group>
           </Col>
           <Col md="12">
             <Form.Group>
               <Form.Label>Address Detail:</Form.Label>
-              <Form.Control
-                as="textarea"
+              <Controller
                 name="addressDetail"
-                value={address.addressDetail}
-                onChange={handleInputChange}
+                control={control}
+                render={({ field }) => (
+                  <Form.Control
+                    as="textarea"
+                    {...field}
+                    isInvalid={!!errors.addressDetail}
+                  />
+                )}
               />
+              <Form.Control.Feedback type="invalid">
+                {errors.addressDetail?.message}
+              </Form.Control.Feedback>
             </Form.Group>
           </Col>
         </Row>
@@ -176,41 +230,61 @@ export default function Address() {
           <Col md="6">
             <Form.Group>
               <Form.Label>Province:</Form.Label>
-              <Form.Control
-                as="select"
+              <Controller
                 name="province"
-                value={selectedProvinceId}
-                onChange={handleInputChange}
-              >
-                <option value="">Select Province</option>
-                {provinces.map((province) => (
-                  <option
-                    key={province.province_id}
-                    value={province.province_id}
+                control={control}
+                render={({ field }) => (
+                  <Form.Control
+                    as="select"
+                    {...field}
+                    onChange={(e) => {
+                      handleInputChange(e, setValue);
+                    }}
+                    isInvalid={!!errors.province}
                   >
-                    {province.province}
-                  </option>
-                ))}
-              </Form.Control>
+                    <option value="">Select Province</option>
+                    {provinces.map((province) => (
+                      <option
+                        key={province.province_id}
+                        value={province.province_id}
+                      >
+                        {province.province}
+                      </option>
+                    ))}
+                  </Form.Control>
+                )}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.province?.message}
+              </Form.Control.Feedback>
             </Form.Group>
           </Col>
           <Col md="6">
             <Form.Group>
               <Form.Label>City:</Form.Label>
-              <Form.Control
-                as="select"
+              <Controller
                 name="city"
-                value={selectedCityId}
-                onChange={handleInputChange}
-                disabled={!selectedProvinceId}
-              >
-                <option value="">Select City</option>
-                {cities.map((city) => (
-                  <option key={city.city_id} value={city.city_id}>
-                    {city.city_name}
-                  </option>
-                ))}
-              </Form.Control>
+                control={control}
+                render={({ field }) => (
+                  <Form.Control
+                    as="select"
+                    {...field}
+                    onChange={(e) => handleInputChange(e, setValue)}
+                    isInvalid={!!errors.city}
+                    disabled={!selectedProvinceId}
+                  >
+                    <option value="">Select City</option>
+                    {cities.map((city) => (
+                      <option key={city.city_id} value={city.city_id}>
+                        {city.city_name}
+                      </option>
+                    ))}
+                  </Form.Control>
+                )}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.city?.message}
+              </Form.Control.Feedback>
             </Form.Group>
           </Col>
         </Row>
@@ -264,7 +338,7 @@ export default function Address() {
         </div>
         <Button
           variant="primary"
-          onClick={handleCheckout}
+          type="submit"
           disabled={loading || !selectedService}
         >
           {loading ? "Processing..." : "Checkout"}
