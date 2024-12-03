@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 # .env
-apiConfig.js
+# apiConfig.js
 assets
 
 # Editor directories and files
